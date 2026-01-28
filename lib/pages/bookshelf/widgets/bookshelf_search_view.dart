@@ -25,7 +25,7 @@ class BookshelfSearchView extends StatelessWidget {
             textAlignVertical: TextAlignVertical.center,
             textInputAction: TextInputAction.search,
             decoration: InputDecoration(
-              hintText: "关键词",
+              hintText: "关键词", //TODO 翻译
               suffixIcon: IconButton(
                 icon: const Icon(Icons.clear),
                 onPressed: () {

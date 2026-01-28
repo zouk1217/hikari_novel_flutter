@@ -20,6 +20,7 @@ import 'package:ttf_metadata/ttf_metadata.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../common/database/database.dart';
+import '../../common/log.dart';
 import '../../models/cat_volume.dart';
 import '../../models/page_state.dart';
 import '../../network/api.dart';
@@ -109,6 +110,12 @@ class ReaderController extends GetxController {
     getBgImage();
 
     checkFontFile(true);
+
+    //延迟更新阅读记录
+    //debounce / ever / interval 只能在 Controller 生命周期里创建一次
+    //TODO 还需要优化
+    debounce(location, (_) async => setReadHistory(), time: const Duration(milliseconds: 100));
+    debounce(currentIndex, (_) async => setReadHistory(), time: const Duration(milliseconds: 100));
   }
 
   @override
@@ -280,6 +287,7 @@ class ReaderController extends GetxController {
   }
 
   void setReadHistory() {
+    Log.d("setReadHistory");
     DBService.instance.upsertReadHistory(
       ReadHistoryEntityData(
         cid: cid,

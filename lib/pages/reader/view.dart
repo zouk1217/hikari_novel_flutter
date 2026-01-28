@@ -219,8 +219,7 @@ class ReaderPage extends StatelessWidget {
               } else if (max > 0) {
                 controller.location.value = position.toInt();
                 controller.verticalProgress.value = ((position.toInt() / max.toInt()) * 100).toInt();
-                //延迟更新阅读记录
-                debounce(controller.location, (_) => controller.setReadHistory(), time: const Duration(milliseconds: 500));
+                //由controller的debounce监听location变化，判断是否更新历史阅读记录
               }
             },
           ),
@@ -269,8 +268,7 @@ class ReaderPage extends StatelessWidget {
             controller.setReadHistory(); //立即更新历史阅读记录
           } else if (max > 0) {
             controller.horizontalProgress.value = int.parse(((index + 1) / max * 100.0).toStringAsFixed(0));
-            //延迟更新阅读记录
-            debounce(controller.currentIndex, (_) => controller.setReadHistory(), time: const Duration(milliseconds: 500));
+            //由controller的debounce监听currentIndex变化，判断是否更新历史阅读记录
           }
         },
         onViewImage: (index) => Get.toNamed(RoutePath.photo, arguments: {"gallery_mode": true, "list": controller.images, "index": index}),

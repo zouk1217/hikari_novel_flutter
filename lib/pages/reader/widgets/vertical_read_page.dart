@@ -15,7 +15,16 @@ class VerticalReadPage extends StatefulWidget {
   final ScrollController controller;
   final Function(double position, double max) onScroll;
 
-  const VerticalReadPage(this.text, this.images, {required this.initPosition, required this.padding, required this.style, required this.controller, required this.onScroll, super.key});
+  const VerticalReadPage(
+    this.text,
+    this.images, {
+    required this.initPosition,
+    required this.padding,
+    required this.style,
+    required this.controller,
+    required this.onScroll,
+    super.key,
+  });
 
   @override
   State<StatefulWidget> createState() => _VerticalReadPageState();
@@ -73,7 +82,8 @@ class _VerticalReadPageState extends State<VerticalReadPage> with WidgetsBinding
     final newSig = _layoutSignature();
     if (newSig != _lastLayoutSig) {
       _lastLayoutSig = newSig;
-      if (widget.text != oldWidget.text && listEquals(widget.images, oldWidget.images)) { //判断章节是否切换
+      if (widget.text != oldWidget.text && listEquals(widget.images, oldWidget.images)) {
+        //判断章节是否切换
         setState(() {});
       }
       resetPage();

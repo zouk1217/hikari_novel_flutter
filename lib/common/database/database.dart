@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:hikari_novel_flutter/common/migration.dart';
 import 'package:path_provider/path_provider.dart';
 import 'entity.dart';
 
@@ -16,28 +17,7 @@ class AppDatabase extends _$AppDatabase {
   MigrationStrategy get migration => MigrationStrategy(
     onUpgrade: (m, from, to) async {
       if (from == 1 && to == 2) {
-        //TODO 更多的逻辑
-        //创建新表
-        await customStatement('''
-          CREATE TABLE read_history_entity_new (
-            cid TEXT PRIMARY KEY,
-            aid TEXT,
-            reader_mode INTEGER,
-            is_dual_page INTEGER,
-            location INTEGER,
-            progress INTEGER,
-            is_latest INTEGER
-          );
-        ''');
-        //拷贝旧数据
-        await customStatement('''
-          INSERT INTO read_history_entity_new (cid, aid, reader_mode, is_dual_page, location, progress, is_latest)
-          SELECT cid, aid, reader_mode, is_dual_page, location, progress, is_latest FROM read_history_entity;
-        ''');
-        //删除旧表
-        await customStatement("DROP TABLE read_history_entity;");
-        //重命名新表
-        await customStatement("ALTER TABLE read_history_entity_new RENAME TO read_history_entity;");
+        Migration.fromOneToTwo(this);
       }
     },
   );
