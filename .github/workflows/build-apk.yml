@@ -1,41 +1,56 @@
 name: Build Flutter APK
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4  # 建议升级到 v4
+      - uses: actions/checkout@v4
       
       - name: Setup Java
-        uses: actions/setup-java@v4  # 建议升级到 v4
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '17'         # 【重要修改】这里把 11 改成 17
+          java-version: '17'
       
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'    # 【关键修改】改成使用 stable 通道，它会自动拉取最新稳定版
-      
+          channel: 'stable'
+
+      # 1. 解锁保险柜里的密钥文件
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/my-release-key.jks
+
+      # 2. 注入固定包名 & 注入永久签名配置
+      # 我们用 sed 强行修改 build.gradle.kts，这样就不怕上游更新了
+      - name: Inject Custom Configs
+        run: |
+          # 修改包名（请把 com.my.custom.app 换成你想要的）
+          sed -i 's/applicationId\s*=\s*".*"/applicationId = "com.zouk.hikari.app"/g' android/app/build.gradle.kts
+          
+          # 修改签名逻辑：强制 release 版使用我们的 jks 文件
+          # 这一段比较暴力，直接寻找 signingConfigs.getByName("debug") 并替换
+          sed -i 's/signingConfig = signingConfigs.getByName("debug")/signingConfig = signingConfigs.create("release") { \
+            storeFile = file("my-release-key.jks") \
+            storePassword = "${{ secrets.KEYSTORE_PASSWORD }}" \
+            keyAlias = "${{ secrets.KEY_ALIAS }}" \
+            keyPassword = "${{ secrets.KEY_PASSWORD }}" \
+          }/g' android/app/build.gradle.kts
+
       - name: Get dependencies
         run: flutter pub get
-      
-      - name: Inject Custom Package Name
-        run: |
-          sed -i 's/applicationId\s*=\s*".*"/applicationId = "com.zouk.hikari.app"/g' android/app/build.gradle.kts
       
       - name: Build APK
         run: flutter build apk --release
       
       - name: Upload APK
-        uses: actions/upload-artifact@v4 # 建议升级到 v4
+        uses: actions/upload-artifact@v4
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
