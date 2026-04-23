@@ -1,0 +1,17 @@
+name: Generate Keystore
+on: workflow_dispatch # 手动触发
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Keystore
+        run: |
+          # 这一行是核心：生成一个有效期 100 年的密钥
+          keytool -genkey -v -keystore my-release-key.jks -keyalg RSA -keysize 2048 -validity 10000 \
+            -alias my-key-alias -storepass mypassword123 -keypass mypassword123 \
+            -dname "CN=MyName, OU=MyOrg, O=MyCompany, L=City, S=State, C=CN"
+          
+          # 将生成的二进制文件转换成一段文本（Base64），方便我们复制
+          echo "------------ 复制下面这段 Base64 字符串 ------------"
+          base64 -w 0 my-release-key.jks
+          echo -e "\n--------------------------------------------------"
