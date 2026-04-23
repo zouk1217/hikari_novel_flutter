@@ -1,9 +1,11 @@
 name: Build Flutter APK
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build:
@@ -22,41 +24,22 @@ jobs:
         with:
           channel: 'stable'
 
-      # 1. 解锁保险柜里的密钥文件
       - name: Decode Keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/my-release-key.jks
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/my-release-key.jks
 
-      # 2. 注入固定包名 & 注入永久签名配置
-      # 我们用 sed 强行修改 build.gradle.kts，这样就不怕上游更新了
       - name: Inject Custom Configs
         run: |
-          # 修改包名（请把 com.my.custom.app 换成你想要的）
-          sed -i 's/applicationId\s*=\s*".*"/applicationId = "com.zouk.hikari.app"/g' android/app/build.gradle.kts
-          
-          # 修改签名逻辑：强制 release 版使用我们的 jks 文件
-          # 这一段比较暴力，直接寻找 signingConfigs.getByName("debug") 并替换
-          sed -i 's/signingConfig = signingConfigs.getByName("debug")/signingConfig = signingConfigs.create("release") { \
-            storeFile = file("my-release-key.jks") \
-            storePassword = "${{ secrets.KEYSTORE_PASSWORD }}" \
-            keyAlias = "${{ secrets.KEY_ALIAS }}" \
-            keyPassword = "${{ secrets.KEY_PASSWORD }}" \
-          }/g' android/app/build.gradle.kts
+          sed -i 's/applicationId\s*=\s*".*"/applicationId = "com.my.custom.app"/g' android/app/build.gradle.kts
+          sed -i 's/signingConfig = signingConfigs.getByName("debug")/signingConfig = signingConfigs.create("release") { storeFile = file("my-release-key.jks"); storePassword = "${{ secrets.KEYSTORE_PASSWORD }}"; keyAlias = "${{ secrets.KEY_ALIAS }}"; keyPassword = "${{ secrets.KEY_PASSWORD }}" }/g' android/app/build.gradle.kts
 
       - name: Get dependencies
         run: flutter pub get
       
-- name: Build APK
-        # 加上 --split-per-abi 参数，让它按架构分别打包
+      - name: Build APK
         run: flutter build apk --release --split-per-abi
       
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          # 修改上传路径，使用通配符把拆分后的包都传上来
-          path: build/app/outputs/flutter-apk/app-*-release.apk
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: "build/app/outputs/flutter-apk/app-*-release.apk"
