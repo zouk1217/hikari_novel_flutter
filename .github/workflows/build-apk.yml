@@ -46,10 +46,16 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
       
-      - name: Build APK
-        run: flutter build apk --release
+- name: Build APK
+        # 加上 --split-per-abi 参数，让它按架构分别打包
+        run: flutter build apk --release --split-per-abi
       
       - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          # 修改上传路径，使用通配符把拆分后的包都传上来
+          path: build/app/outputs/flutter-apk/app-*-release.apk
         uses: actions/upload-artifact@v4
         with:
           name: app-release
