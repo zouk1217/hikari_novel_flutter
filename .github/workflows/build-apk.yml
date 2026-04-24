@@ -27,9 +27,10 @@ jobs:
       - name: Decode Keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/my-release-key.jks
 
+
       - name: Inject Custom Configs
         run: |
-          sed -i 's/applicationId\s*=\s*".*"/applicationId = "com.zouk.hikari.app"/g' android/app/build.gradle.kts
+          sed -i 's/applicationId\s*=\s*".*"/applicationId = "${{ secrets.MY_PACKAGE_NAME }}"/g' android/app/build.gradle.kts
           sed -i 's/signingConfig = signingConfigs.getByName("debug")/signingConfig = signingConfigs.create("release") { storeFile = file("my-release-key.jks"); storePassword = "${{ secrets.KEYSTORE_PASSWORD }}"; keyAlias = "${{ secrets.KEY_ALIAS }}"; keyPassword = "${{ secrets.KEY_PASSWORD }}" }/g' android/app/build.gradle.kts
 
       - name: Get dependencies
